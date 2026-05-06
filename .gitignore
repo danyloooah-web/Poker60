@@ -26,6 +26,8 @@ model/*
 models/*
 # Training artifacts: chunk_model.joblib is tracked via Git LFS (see .gitattributes); ignore other large dumps
 scripts/miner/training/artifacts/chunk_gbdt.joblib
+scripts/miner/training/artifacts/chunk_model.before_benchmark_*.joblib
+scripts/miner/training/benchmark/
 hands_generator/human_hands/synthetic_prepared.jsonl
 runs/*
 # C extensions

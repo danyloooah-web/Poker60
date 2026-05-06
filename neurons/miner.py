@@ -132,18 +132,19 @@ class Miner(BaseMinerNeuron):
             "repo_url": "",
             "repo_commit": "",
             "notes": (
-                "Trained via scripts/miner/training/train_model.py: synthetic + disk JSONL + "
-                "optional hands_generator/training_prepared.jsonl; --calibrate adds "
-                "poker44.training.calibration.PlattCalibratedClassifier."
+                "Trained via scripts/miner/training/train_model.py: synthetic chunks plus the "
+                "public Poker44 training benchmark JSONL when present; --calibrate adds "
+                "poker44.training.calibration.PlattCalibratedClassifier when supported."
             ),
             "training_data_statement": (
-                "Synthetic behavioral regimes plus optional sanitized JSONL from hands_generator; "
-                "human vs bot labels from simulator / exports."
+                "Synthetic behavioral regimes plus released Poker44 public benchmark chunks with "
+                "ground-truth labels; released benchmark chunks are training-only and not reused in "
+                "the live competitive field."
             ),
             "training_data_sources": [
                 "synthetic_poker44_training",
-                "synthetic_prepared.jsonl",
-                "optional_training_prepared.jsonl",
+                "https://api.poker44.net/api/v1/benchmark/releases",
+                "scripts/miner/training/benchmark/benchmark_prepared.jsonl",
             ],
             "private_data_attestation": (
                 "Does not use validator evaluation payloads for training."

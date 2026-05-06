@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
@@ -42,6 +43,39 @@ def _sha256_for_files(paths: Iterable[Path]) -> str:
     return digest.hexdigest()
 
 
+def _git_output(repo_root: Path, *args: str) -> str:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_root), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return proc.stdout.strip()
+
+
+def _normalize_remote_url(raw_url: str) -> str:
+    raw_url = raw_url.strip()
+    if raw_url.startswith("git@github.com:"):
+        suffix = raw_url.removeprefix("git@github.com:")
+        return f"https://github.com/{suffix.removesuffix('.git')}"
+    if raw_url.startswith("git@gitlab.com:"):
+        suffix = raw_url.removeprefix("git@gitlab.com:")
+        return f"https://gitlab.com/{suffix.removesuffix('.git')}"
+    return raw_url.removesuffix(".git").rstrip("/")
+
+
+def _repo_url_from_git(repo_root: Path) -> str:
+    for remote_name in ("origin", "danyloooah"):
+        raw_url = _git_output(repo_root, "remote", "get-url", remote_name)
+        if raw_url:
+            return _normalize_remote_url(raw_url)
+    return ""
+
+
 def build_local_model_manifest(
     *,
     repo_root: Path,
@@ -52,6 +86,19 @@ def build_local_model_manifest(
     implementation_paths = [path.resolve() for path in implementation_files]
     implementation_sha256 = _sha256_for_files(implementation_paths)
     default_values = dict(defaults or {})
+    repo_url = os.getenv(
+        "POKER44_MODEL_REPO_URL",
+        str(default_values.get("repo_url", "")),
+    ).strip()
+    repo_commit = os.getenv(
+        "POKER44_MODEL_REPO_COMMIT",
+        str(default_values.get("repo_commit", "")),
+    ).strip()
+
+    if not repo_url:
+        repo_url = _repo_url_from_git(repo_root)
+    if not repo_commit:
+        repo_commit = _git_output(repo_root, "rev-parse", "HEAD")
 
     manifest: Dict[str, Any] = {
         "schema_version": "1",
@@ -75,14 +122,8 @@ def build_local_model_manifest(
             "POKER44_MODEL_LICENSE",
             str(default_values.get("license", "MIT")),
         ),
-        "repo_url": os.getenv(
-            "POKER44_MODEL_REPO_URL",
-            str(default_values.get("repo_url", "")),
-        ).strip(),
-        "repo_commit": os.getenv(
-            "POKER44_MODEL_REPO_COMMIT",
-            str(default_values.get("repo_commit", "")),
-        ).strip(),
+        "repo_url": repo_url,
+        "repo_commit": repo_commit,
         "artifact_url": os.getenv(
             "POKER44_MODEL_ARTIFACT_URL",
             str(default_values.get("artifact_url", "")),
