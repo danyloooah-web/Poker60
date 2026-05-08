@@ -1,0 +1,14 @@
+PokerStars Zoom Hand #100: Hold'em No Limit (€0.02/€0.05) - 2024/01/01 12:00:00 CET
+Table 'Poker44Sample' 6-max Seat #1 is the button
+Seat 1: Alice (€5.00 in chips)
+Seat 2: Bob (€5.00 in chips)
+*** HOLE CARDS ***
+Bob: posts small blind €0.02
+Alice: posts big blind €0.05
+Bob: folds
+Uncalled bet (€0.03) returned to Alice
+Alice collected €0.04 from pot
+*** SUMMARY ***
+Total pot €0.04 | Rake €0.00
+Seat 2: Bob (small blind) folded before Flop
+Seat 1: Alice (big blind) collected (€0.04)
