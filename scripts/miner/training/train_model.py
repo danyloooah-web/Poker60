@@ -3,6 +3,8 @@
 Train a chunk-level bot-risk model: balanced synthetic chunks + optional JSONL files.
 
 Auto-loads when present:
+  - scripts/miner/training/benchmark/benchmark_prepared.jsonl (public benchmark)
+  - scripts/miner/training/real_pokerstars/pokerstars_prepared.jsonl (capped real hands)
   - hands_generator/human_hands/training_prepared.jsonl   (real parser export)
   - hands_generator/human_hands/synthetic_prepared.jsonl    (bulk synthetic disk)
 
@@ -35,6 +37,18 @@ ARTIFACTS = Path(__file__).resolve().parent / "artifacts"
 DEFAULT_OUT = ARTIFACTS / "chunk_model.joblib"
 REAL_JSONL = REPO / "hands_generator" / "human_hands" / "training_prepared.jsonl"
 DISK_SYNTHETIC_JSONL = REPO / "hands_generator" / "human_hands" / "synthetic_prepared.jsonl"
+BENCHMARK_JSONL = Path(__file__).resolve().parent / "benchmark" / "benchmark_prepared.jsonl"
+POKERSTARS_JSONL = Path(__file__).resolve().parent / "real_pokerstars" / "pokerstars_prepared.jsonl"
+SYNTH_LIKE_JSONL = (
+    Path(__file__).resolve().parent
+    / "synthetic_benchmark_like"
+    / "synthetic_benchmark_like_train.jsonl"
+)
+BOT_SOURCE_JSONLS = [
+    Path(__file__).resolve().parent / "bot_sources" / "bot_train_chunks_benchmark_like.jsonl",
+    Path(__file__).resolve().parent / "bot_sources" / "hf_bot_sim_train_chunks_60_prepared.jsonl",
+    Path(__file__).resolve().parent / "bot_sources" / "pluribus_train_chunks_60_prepared.jsonl",
+]
 
 
 def _load_jsonl_rows(path: Path) -> list[dict]:
@@ -49,7 +63,7 @@ def _load_jsonl_rows(path: Path) -> list[dict]:
 
 def main() -> None:
     sys.path.insert(0, str(REPO))
-    from poker44.training.calibration import PlattCalibratedClassifier
+    from poker44.training.calibration import PlattCalibratedClassifier, calibration_scores
     from poker44.training.features import FEATURE_VERSION, N_FEATURES, featurize_chunk
     from poker44.training.synthetic import generate_chunk
     from poker44.validator.sanitization import prepare_hand_for_miner
@@ -80,6 +94,46 @@ def main() -> None:
         help="Skip synthetic_prepared.jsonl bulk file if present.",
     )
     p.add_argument(
+        "--no-benchmark-jsonl",
+        action="store_true",
+        help="Skip benchmark/benchmark_prepared.jsonl.",
+    )
+    p.add_argument(
+        "--benchmark-weight",
+        type=float,
+        default=12.0,
+        help=(
+            "sample_weight for rows from benchmark/benchmark_prepared.jsonl. "
+            "Default 12 keeps the small benchmark set influential."
+        ),
+    )
+    p.add_argument(
+        "--pokerstars-jsonl",
+        type=Path,
+        default=POKERSTARS_JSONL,
+        help="Prepared PokerStars/RealStars JSONL to load when present.",
+    )
+    p.add_argument(
+        "--no-pokerstars-jsonl",
+        action="store_true",
+        help="Skip the prepared PokerStars/RealStars JSONL.",
+    )
+    p.add_argument(
+        "--max-pokerstars-rows",
+        type=int,
+        default=10000,
+        help=(
+            "Random cap for PokerStars/RealStars rows before training. "
+            "Use 0 to load all rows. Default 10000 avoids drowning benchmark data."
+        ),
+    )
+    p.add_argument(
+        "--pokerstars-weight",
+        type=float,
+        default=1.0,
+        help="sample_weight for rows from --pokerstars-jsonl.",
+    )
+    p.add_argument(
         "--real-weight",
         type=float,
         default=6.0,
@@ -90,6 +144,43 @@ def main() -> None:
         type=float,
         default=1.0,
         help="sample_weight for rows from synthetic_prepared.jsonl.",
+    )
+    p.add_argument(
+        "--no-synth-like-jsonl",
+        action="store_true",
+        help="Skip synthetic_benchmark_like/synthetic_benchmark_like_train.jsonl.",
+    )
+    p.add_argument(
+        "--synth-like-weight",
+        type=float,
+        default=4.0,
+        help=(
+            "sample_weight for rows from synthetic_benchmark_like_train.jsonl. "
+            "These are large (40-80 hand) balanced chunks shaped like the benchmark."
+        ),
+    )
+    p.add_argument(
+        "--max-synth-like-rows",
+        type=int,
+        default=0,
+        help="Random cap on synth-like rows (0 = use all).",
+    )
+    p.add_argument(
+        "--no-bot-sources",
+        action="store_true",
+        help="Skip the prepared bot_sources/*.jsonl files.",
+    )
+    p.add_argument(
+        "--bot-sources-weight",
+        type=float,
+        default=3.0,
+        help="sample_weight for rows from bot_sources/*.jsonl (all bot-only).",
+    )
+    p.add_argument(
+        "--max-bot-source-rows",
+        type=int,
+        default=0,
+        help="Random cap per bot-source file (0 = use all).",
     )
     p.add_argument("--out", type=Path, default=DEFAULT_OUT)
     p.add_argument(
@@ -122,6 +213,46 @@ def main() -> None:
     y_list: list[int] = []
     w_list: list[float] = []
 
+    def _display_path(path: Path) -> str:
+        try:
+            return str(path.relative_to(REPO))
+        except ValueError:
+            return str(path)
+
+    def _append_prepared_rows(
+        *,
+        path: Path,
+        rows: list[dict],
+        weight: float,
+        source_name: str,
+        max_rows: int | None = None,
+    ) -> int:
+        original_rows = len(rows)
+        if max_rows is not None and max_rows > 0 and original_rows > max_rows:
+            selected = rng.choice(original_rows, size=max_rows, replace=False)
+            rows = [rows[int(i)] for i in selected]
+
+        used_rows = 0
+        for row in rows:
+            hands = row.get("hands") or []
+            y = int(row.get("chunk_label", 0))
+            if not hands:
+                continue
+            X_list.append(featurize_chunk(hands))
+            y_list.append(y)
+            w_list.append(float(weight))
+            used_rows += 1
+
+        cap_msg = ""
+        if max_rows is not None and max_rows > 0 and original_rows > max_rows:
+            cap_msg = f" (sampled {used_rows}/{original_rows})"
+        print(
+            f"Adding {used_rows} rows from {_display_path(path)} as {source_name} "
+            f"(weight={weight}){cap_msg}",
+            flush=True,
+        )
+        return used_rows
+
     n = max(100, args.samples // 2)
     print(f"Building {n * 2} in-memory synthetic chunks (balanced human/bot)...", flush=True)
     for label_name, y in (("human", 0), ("bot", 1)):
@@ -132,6 +263,15 @@ def main() -> None:
             X_list.append(featurize_chunk(prepared))
             y_list.append(y)
             w_list.append(1.0)
+
+    benchmark_rows = 0
+    if not args.no_benchmark_jsonl and BENCHMARK_JSONL.is_file():
+        benchmark_rows = _append_prepared_rows(
+            path=BENCHMARK_JSONL,
+            rows=_load_jsonl_rows(BENCHMARK_JSONL),
+            weight=float(args.benchmark_weight),
+            source_name="benchmark",
+        )
 
     real_rows = 0
     if not args.no_real_jsonl:
@@ -144,16 +284,48 @@ def main() -> None:
             if not jp.is_file():
                 continue
             rows = _load_jsonl_rows(jp)
-            real_rows += len(rows)
-            print(f"Adding {len(rows)} rows from {jp.relative_to(REPO)} (weight={args.real_weight})", flush=True)
-            for row in rows:
-                hands = row.get("hands") or []
-                y = int(row.get("chunk_label", 0))
-                if not hands:
-                    continue
-                X_list.append(featurize_chunk(hands))
-                y_list.append(y)
-                w_list.append(float(args.real_weight))
+            real_rows += _append_prepared_rows(
+                path=jp,
+                rows=rows,
+                weight=float(args.real_weight),
+                source_name="real-jsonl",
+            )
+
+    pokerstars_rows = 0
+    if not args.no_pokerstars_jsonl and args.pokerstars_jsonl is not None and args.pokerstars_jsonl.is_file():
+        pokerstars_cap = None if int(args.max_pokerstars_rows) <= 0 else int(args.max_pokerstars_rows)
+        pokerstars_rows = _append_prepared_rows(
+            path=args.pokerstars_jsonl,
+            rows=_load_jsonl_rows(args.pokerstars_jsonl),
+            weight=float(args.pokerstars_weight),
+            source_name="pokerstars",
+            max_rows=pokerstars_cap,
+        )
+
+    synth_like_rows = 0
+    if not args.no_synth_like_jsonl and SYNTH_LIKE_JSONL.is_file():
+        synth_like_cap = None if int(args.max_synth_like_rows) <= 0 else int(args.max_synth_like_rows)
+        synth_like_rows = _append_prepared_rows(
+            path=SYNTH_LIKE_JSONL,
+            rows=_load_jsonl_rows(SYNTH_LIKE_JSONL),
+            weight=float(args.synth_like_weight),
+            source_name="synth-like",
+            max_rows=synth_like_cap,
+        )
+
+    bot_source_rows = 0
+    if not args.no_bot_sources:
+        bot_cap = None if int(args.max_bot_source_rows) <= 0 else int(args.max_bot_source_rows)
+        for bot_path in BOT_SOURCE_JSONLS:
+            if not bot_path.is_file():
+                continue
+            bot_source_rows += _append_prepared_rows(
+                path=bot_path,
+                rows=_load_jsonl_rows(bot_path),
+                weight=float(args.bot_sources_weight),
+                source_name=f"bot-source[{bot_path.stem}]",
+                max_rows=bot_cap,
+            )
 
     disk_syn = 0
     if not args.no_disk_synthetic and DISK_SYNTHETIC_JSONL.is_file():
@@ -179,8 +351,10 @@ def main() -> None:
     sw = np.array(w_list, dtype=np.float64)
 
     print(
-        f"Matrix shape {X.shape} | mem_synth={n * 2} real_jsonl={real_rows} "
-        f"disk_synth={disk_syn} | fitting ensemble...",
+        f"Matrix shape {X.shape} | mem_synth={n * 2} benchmark={benchmark_rows} "
+        f"real_jsonl={real_rows} pokerstars={pokerstars_rows} synth_like={synth_like_rows} "
+        f"bot_sources={bot_source_rows} disk_synth={disk_syn} "
+        "| fitting ensemble...",
         flush=True,
     )
     if X.shape[1] != N_FEATURES:
@@ -242,9 +416,7 @@ def main() -> None:
         sw_fit = sw_tr[idx_fit]
         clf.fit(X_fit, y_fit, sample_weight=sw_fit)
         try:
-            scores_cal = clf.decision_function(X_cal)
-            if scores_cal.ndim > 1:
-                scores_cal = scores_cal[:, 1]
+            scores_cal = calibration_scores(clf, X_cal)
             lr = LogisticRegression(
                 C=1e12,
                 solver="lbfgs",
@@ -281,9 +453,18 @@ def main() -> None:
         "n_features": N_FEATURES,
         "train_samples": int(X.shape[0]),
         "mem_synthetic_chunks": int(n * 2),
+        "benchmark_jsonl_chunks": int(benchmark_rows),
         "real_jsonl_chunks": int(real_rows),
+        "pokerstars_jsonl_chunks": int(pokerstars_rows),
+        "synth_like_chunks": int(synth_like_rows),
+        "bot_source_chunks": int(bot_source_rows),
         "disk_synthetic_chunks": int(disk_syn),
+        "benchmark_weight": float(args.benchmark_weight),
         "real_weight": float(args.real_weight),
+        "pokerstars_weight": float(args.pokerstars_weight),
+        "synth_like_weight": float(args.synth_like_weight),
+        "bot_sources_weight": float(args.bot_sources_weight),
+        "max_pokerstars_rows": int(args.max_pokerstars_rows),
         "disk_weight": float(args.disk_weight),
         "human_sample_boost": hb,
         "calibrated": calibrated_flag,

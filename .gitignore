@@ -28,6 +28,7 @@ models/*
 scripts/miner/training/artifacts/chunk_gbdt.joblib
 scripts/miner/training/artifacts/chunk_model.before_benchmark_*.joblib
 scripts/miner/training/benchmark/
+scripts/miner/training/real_pokerstars/
 hands_generator/human_hands/synthetic_prepared.jsonl
 runs/*
 # C extensions
@@ -208,6 +209,15 @@ scripts/validator/main/install_dependencies.sh
 testing/
 data/mongodb_data/
 data/validator_mixed_chunks.json
+data/benchmark/
+
+# Large local-only training inputs (multi-GB; do not commit)
+scripts/miner/training/bot_sources/
+scripts/miner/training/synthetic_benchmark_like/
+scripts/miner/training/artifacts/chunk_model.before_*.joblib
+scripts/miner/training/artifacts/chunk_model.fast_*.joblib
+scripts/miner/training/artifacts/chunk_model.balanced_*.joblib
+scripts/miner/training/artifacts/chunk_model.bot_sources_*.joblib
 openClutch_venv/
 prueba.dem.zst
 prueba.dem.zst:Zone.Identifier

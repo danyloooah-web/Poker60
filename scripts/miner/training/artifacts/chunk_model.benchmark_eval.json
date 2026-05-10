@@ -1,0 +1,360 @@
+{
+  "model_path": "/home/Poker/scripts/miner/training/artifacts/chunk_model.joblib",
+  "benchmark_path": "/home/Poker/scripts/miner/training/benchmark/benchmark_prepared.jsonl",
+  "threshold": 0.5,
+  "model_bundle_summary": {
+    "feature_version": 3,
+    "n_features": 34,
+    "train_samples": 144592,
+    "calibrated": true,
+    "holdout_roc_auc": 0.9675431057747637,
+    "holdout_subnet_reward": 0.816963787172743,
+    "benchmark_jsonl_chunks": 4280,
+    "synth_like_chunks": 3000,
+    "bot_source_chunks": 5312,
+    "pokerstars_jsonl_chunks": 12000,
+    "human_sample_boost": 1.4
+  },
+  "overall": {
+    "rows": 4280,
+    "label_counts": {
+      "human": 2140,
+      "bot": 2140
+    },
+    "accuracy": 1.0,
+    "roc_auc": 1.0,
+    "average_precision": 1.0,
+    "confusion_matrix": {
+      "tn": 2140,
+      "fp": 0,
+      "fn": 0,
+      "tp": 2140
+    },
+    "fpr": 0.0,
+    "bot_recall": 1.0,
+    "subnet_reward": 1.0,
+    "reward_detail": {
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "ap_score": 1.0,
+      "human_safety_penalty": 1.0,
+      "base_score": 1.0,
+      "reward": 1.0
+    },
+    "score_summary": {
+      "min": 1.984839351754616e-06,
+      "p25": 0.0003068060100150728,
+      "median": 0.7153388531144117,
+      "p75": 0.9999840475749104,
+      "max": 0.999996726742873
+    }
+  },
+  "by_source_date": {
+    "2026-04-30": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 2.8472963450146672e-06,
+        "p25": 0.0004381009980471699,
+        "median": 0.5298082346417314,
+        "p75": 0.9999868875254446,
+        "max": 0.999994079667674
+      }
+    },
+    "2026-05-01": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 2.7322498189750806e-06,
+        "p25": 0.0005751486782282641,
+        "median": 0.597213132174737,
+        "p75": 0.9999869389891545,
+        "max": 0.9999949647618163
+      }
+    },
+    "2026-05-02": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 2.5737671844673523e-06,
+        "p25": 0.00033420820098468084,
+        "median": 0.5225824732738829,
+        "p75": 0.9999876892086375,
+        "max": 0.9999946979254999
+      }
+    },
+    "2026-05-03": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 1.984839351754616e-06,
+        "p25": 0.0003390038773080794,
+        "median": 0.5268960494647299,
+        "p75": 0.9999877591078858,
+        "max": 0.999994687279216
+      }
+    },
+    "2026-05-04": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 3.854780381433538e-06,
+        "p25": 0.0004007619096393714,
+        "median": 0.5454988338691177,
+        "p75": 0.9999864056482952,
+        "max": 0.9999949924309289
+      }
+    },
+    "2026-05-05": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 2.4847574261643594e-06,
+        "p25": 0.0006766177230018916,
+        "median": 0.5401799863763594,
+        "p75": 0.9999848121828881,
+        "max": 0.999996726742873
+      }
+    },
+    "2026-05-06": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 3.292577546567427e-06,
+        "p25": 0.00032098826892250105,
+        "median": 0.5556480656633906,
+        "p75": 0.9999860779172378,
+        "max": 0.9999949712234707
+      }
+    },
+    "2026-05-07": {
+      "rows": 480,
+      "label_counts": {
+        "human": 240,
+        "bot": 240
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 240,
+        "fp": 0,
+        "fn": 0,
+        "tp": 240
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 3.7016573984425166e-06,
+        "p25": 3.648476395314714e-05,
+        "median": 0.7183784004736697,
+        "p75": 0.9998211258130909,
+        "max": 0.999993792163001
+      }
+    },
+    "2026-05-08": {
+      "rows": 440,
+      "label_counts": {
+        "human": 220,
+        "bot": 220
+      },
+      "accuracy": 1.0,
+      "roc_auc": 1.0,
+      "average_precision": 1.0,
+      "confusion_matrix": {
+        "tn": 220,
+        "fp": 0,
+        "fn": 0,
+        "tp": 220
+      },
+      "fpr": 0.0,
+      "bot_recall": 1.0,
+      "subnet_reward": 1.0,
+      "reward_detail": {
+        "fpr": 0.0,
+        "bot_recall": 1.0,
+        "ap_score": 1.0,
+        "human_safety_penalty": 1.0,
+        "base_score": 1.0,
+        "reward": 1.0
+      },
+      "score_summary": {
+        "min": 2.6651823563013373e-06,
+        "p25": 1.1275557919878279e-05,
+        "median": 0.4891599185397792,
+        "p75": 0.9990443919773682,
+        "max": 0.9999942563199122
+      }
+    }
+  }
+}

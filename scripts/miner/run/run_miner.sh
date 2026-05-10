@@ -7,7 +7,7 @@ WALLET_NAME="${WALLET_NAME:-poker44-miner-ck}"
 HOTKEY="${HOTKEY:-poker44-miner-hk}"
 NETWORK="${NETWORK:-finney}"
 MINER_SCRIPT="${MINER_SCRIPT:-./neurons/miner.py}"
-PM2_NAME="${PM2_NAME:-poker44_miner1}"
+PM2_NAME="${PM2_NAME:-poker44_miner11}"
 AXON_PORT="${AXON_PORT:-8091}"
 ALLOWED_VALIDATOR_HOTKEYS="${ALLOWED_VALIDATOR_HOTKEYS:-}"
 
@@ -80,6 +80,9 @@ fi
 
 # Default trained chunk model (override if needed)
 export POKER44_CHUNK_MODEL_PATH="${POKER44_CHUNK_MODEL_PATH:-$REPO_ROOT/scripts/miner/training/artifacts/chunk_model.joblib}"
+
+# Public miner identity in the model_manifest. Override via POKER44_MODEL_NAME if you fork.
+export POKER44_MODEL_NAME="${POKER44_MODEL_NAME:-poker44-baseline-v2}"
 
 # Custom ML + upstream repo_url breaks transparent policy (repo_url_must_point_to_model_repo).
 if [[ -n "${POKER44_MODEL_REPO_URL:-}" ]] && [[ -f "$POKER44_CHUNK_MODEL_PATH" ]]; then
