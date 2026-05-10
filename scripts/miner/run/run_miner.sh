@@ -39,7 +39,7 @@ export PYTHONPATH="$(pwd)"
 # Override with POKER44_MODEL_REPO_URL / POKER44_MODEL_REPO_COMMIT if needed.
 # Custom miners: point `origin` at your public fork (or set POKER44_MODEL_REPO_URL). If `origin`
 # is unset, same normalization is applied to the `danyloooah` remote when present.
-export POKER44_MODEL_REPO_URL="${POKER44_MODEL_REPO_URL:-https://github.com/danyloooah-web/PokerNew.git}"
+export POKER44_MODEL_REPO_URL="${POKER44_MODEL_REPO_URL:-https://github.com/danyloooah-web/Poker60.git}"
 _poker44_export_repo_url_from_remote() {
   local raw="$1"
   [[ -z "$raw" ]] && return 1
