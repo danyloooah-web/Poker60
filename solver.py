@@ -1,53 +1,57 @@
-"""Reference solver for Subnet 112 (Minotaur).
-
-This is the file miners fork to ship their own strategy. The validator
-harness imports ``SOLVER_CLASS`` from this module and calls
-``generate_plan(intent, state, snapshot)`` on every order.
-
-Default behaviour comes from ``BaselineSwapSolver`` in
-``common/baseline_solver.py``, which on Base routes across both
-Uniswap V3 and Aerodrome Slipstream pools, picks the best output
-across DEXes, and falls back to multi-hop through common intermediary
-tokens (WETH, USDC) when no direct pool wins.
-
-To beat that baseline, override ``generate_plan`` (or any other method)
-on ``MinerSolver`` below — for example by adding new DEXes, splitting a
-trade across pools, learning routes from past orders, or pre-computing
-plans on a faster path than RPC discovery allows.
-
-The validator's screening pipeline builds this repo as a Docker image
-``FROM ghcr.io/subnet112/solver-base:v1`` and runs the runner harness,
-which loads ``SOLVER_CLASS`` from ``/app/solver/solver.py``.
-"""
+"""Danylo Minotaur solver for Subnet 112."""
 
 from __future__ import annotations
 
 import logging
 import os
+from typing import Any
 
-from strategies.dex_aggregator.baseline_solver import BaselineSwapSolver
-from minotaur_subnet.sdk.intent_solver import SolverMetadata
+from strategies.dex_aggregator.baseline_solver import BaselineSwapSolver, _KNOWN_POOLS
+from minotaur_subnet.sdk.intent_solver import MarketSnapshot, SolverMetadata
 
 logger = logging.getLogger(__name__)
 
-
 SOLVER_NAME = os.environ.get("MINOTAUR_SOLVER_NAME", "danylo-minotaur-solver")
-SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.1.0")
+SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.2.0")
 SOLVER_AUTHOR = os.environ.get("MINOTAUR_SOLVER_AUTHOR", "danyloooah")
 
 
 class MinerSolver(BaselineSwapSolver):
-    """Cross-DEX routing solver for Minotaur subnet 112.
-
-    Extends ``BaselineSwapSolver`` with tighter pool-cache refresh, Base DAI
-    pool seeding, and tighter slippage for stablecoin routes.
-    """
+    """Cross-DEX routing solver tuned for Base DAI pairs and benchmark scoring."""
 
     def initialize(self, config: dict) -> None:
         super().initialize(config)
-        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 4.0))
+        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 6.0))
         if self._processor is not None:
-            self._processor.slippage_bps = int(config.get("slippage_bps", 30))
+            self._processor.slippage_bps = int(config.get("slippage_bps", 50))
+
+    def _get_pool_states(
+        self,
+        chain_id: int,
+        snapshot: MarketSnapshot | None,
+    ) -> dict[str, dict[str, Any]]:
+        """Merge RPC-known pools with snapshot pools for fuller route coverage."""
+        pool_states: dict[str, dict[str, Any]] = {}
+
+        if self._rpc_urls.get(chain_id):
+            pool_states.update(self._discover_pools(chain_id))
+            w3 = self._get_web3(chain_id)
+            if w3 is not None:
+                seen = {k.lower() for k in pool_states}
+                for addr in _KNOWN_POOLS.get(chain_id, []):
+                    if addr.lower() in seen:
+                        continue
+                    state = self._query_pool_state(w3, addr)
+                    if state is not None:
+                        pool_states[addr] = state
+                        seen.add(addr.lower())
+
+        if snapshot is not None and snapshot.pool_states:
+            for addr, state in snapshot.pool_states.items():
+                if addr.lower() not in {k.lower() for k in pool_states}:
+                    pool_states[addr] = state
+
+        return pool_states
 
     def metadata(self) -> SolverMetadata:
         base = super().metadata()
@@ -56,8 +60,8 @@ class MinerSolver(BaselineSwapSolver):
             version=SOLVER_VERSION,
             author=SOLVER_AUTHOR,
             description=(
-                "BaselineSwapSolver v1.1 with Base DAI pool seeding, "
-                "expanded intermediaries, and 30 bps slippage."
+                "BaselineSwapSolver v1.2 with Base WETH/DAI pool seeding, "
+                "merged RPC+snapshot pool states, and 50 bps slippage."
             ),
             supported_chains=base.supported_chains,
             supported_intent_types=base.supported_intent_types,
