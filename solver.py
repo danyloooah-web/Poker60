@@ -32,21 +32,22 @@ logger = logging.getLogger(__name__)
 
 
 SOLVER_NAME = os.environ.get("MINOTAUR_SOLVER_NAME", "danylo-minotaur-solver")
-SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.0.0")
+SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.1.0")
 SOLVER_AUTHOR = os.environ.get("MINOTAUR_SOLVER_AUTHOR", "danyloooah")
 
 
 class MinerSolver(BaselineSwapSolver):
     """Cross-DEX routing solver for Minotaur subnet 112.
 
-    Extends ``BaselineSwapSolver`` with tighter pool-cache refresh and
-    Base-specific intermediary tokens for broader multi-hop coverage.
+    Extends ``BaselineSwapSolver`` with tighter pool-cache refresh, Base DAI
+    pool seeding, and tighter slippage for stablecoin routes.
     """
 
     def initialize(self, config: dict) -> None:
         super().initialize(config)
-        # Refresh discovered pool state more often for competitive quoting.
-        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 6.0))
+        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 4.0))
+        if self._processor is not None:
+            self._processor.slippage_bps = int(config.get("slippage_bps", 30))
 
     def metadata(self) -> SolverMetadata:
         base = super().metadata()
@@ -55,8 +56,8 @@ class MinerSolver(BaselineSwapSolver):
             version=SOLVER_VERSION,
             author=SOLVER_AUTHOR,
             description=(
-                "BaselineSwapSolver with faster pool refresh and Base "
-                "intermediary routing (WETH, USDC, cbBTC, USDbC)."
+                "BaselineSwapSolver v1.1 with Base DAI pool seeding, "
+                "expanded intermediaries, and 30 bps slippage."
             ),
             supported_chains=base.supported_chains,
             supported_intent_types=base.supported_intent_types,

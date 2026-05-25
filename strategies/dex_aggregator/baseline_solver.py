@@ -193,6 +193,9 @@ _KNOWN_POOLS: dict[int, list[str]] = {
     ],
     8453: [
         "0xd0b53D9277642d899DF5C87A3966A349A798F224",  # WETH/USDC 0.05%
+        "0x6c561b446416e1a00e8e93e221854d6ea4171372",  # WETH/USDC 0.3%
+        "0xc18f50d6a832f12f6dcaaeee8d0c87a65b96787e",  # DAI/USDC 0.01%
+        "0x22f9623817f152148b4e080e98af66fbe9c5adf8",  # DAI/USDbC 0.05%
     ],
     964: [
         "0x6647dcbeb030dc8E227D8B1A2Cb6A49F3C887E3c",  # WTAO/USDC 0.3% (Astrid Bridge, formerly TaoFi)
