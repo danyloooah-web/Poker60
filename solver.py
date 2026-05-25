@@ -17,7 +17,7 @@ from minotaur_subnet.shared.types import AppIntentDefinition, ExecutionPlan, Int
 logger = logging.getLogger(__name__)
 
 SOLVER_NAME = os.environ.get("MINOTAUR_SOLVER_NAME", "danylo-minotaur-solver")
-SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.2.1")
+SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.2.2")
 SOLVER_AUTHOR = os.environ.get("MINOTAUR_SOLVER_AUTHOR", "danyloooah")
 
 _BASE_WETH = "0x4200000000000000000000000000000000000006"
@@ -97,12 +97,6 @@ class MinerSolver(BaselineSwapSolver):
                 input_token, output_token, amount_in, min_output, fee=100,
             )
         if in_l == _BASE_WETH.lower() and out_l == _BASE_DAI.lower():
-            direct = self._build_base_v3_single(
-                intent, state, snapshot, chain_id,
-                input_token, output_token, amount_in, min_output, fee=100,
-            )
-            if direct is not None:
-                return direct
             return self._build_base_v3_multihop(
                 intent, state, snapshot, chain_id,
                 [_BASE_WETH, _BASE_USDC, _BASE_DAI], [500, 100],
@@ -233,8 +227,8 @@ class MinerSolver(BaselineSwapSolver):
             version=SOLVER_VERSION,
             author=SOLVER_AUTHOR,
             description=(
-                "BaselineSwapSolver v1.2.1 with explicit Base DAI Uni V3 routes "
-                "and merged RPC+snapshot pool discovery."
+                "BaselineSwapSolver v1.2.2 with explicit Base DAI Uni V3 routes "
+                "(DAI/USDC direct, WETH/DAI via USDC hop)."
             ),
             supported_chains=base.supported_chains,
             supported_intent_types=base.supported_intent_types,
