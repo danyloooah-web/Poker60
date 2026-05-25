@@ -16,8 +16,8 @@ from minotaur_subnet.shared.types import AppIntentDefinition, ExecutionPlan, Int
 
 logger = logging.getLogger(__name__)
 
-SOLVER_NAME = os.environ.get("MINOTAUR_SOLVER_NAME", "danylo-minotaur-solver")
-SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "1.2.2")
+SOLVER_NAME = os.environ.get("MINOTAUR_SOLVER_NAME", "baseline-swap-solver")
+SOLVER_VERSION = os.environ.get("MINOTAUR_SOLVER_VERSION", "3.1.0")
 SOLVER_AUTHOR = os.environ.get("MINOTAUR_SOLVER_AUTHOR", "danyloooah")
 
 _BASE_WETH = "0x4200000000000000000000000000000000000006"
@@ -30,9 +30,9 @@ class MinerSolver(BaselineSwapSolver):
 
     def initialize(self, config: dict) -> None:
         super().initialize(config)
-        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 6.0))
+        self._pool_cache_ttl = float(config.get("pool_cache_ttl", 4.0))
         if self._processor is not None:
-            self._processor.slippage_bps = int(config.get("slippage_bps", 50))
+            self._processor.slippage_bps = int(config.get("slippage_bps", 30))
 
     def _get_pool_states(
         self,
@@ -97,6 +97,16 @@ class MinerSolver(BaselineSwapSolver):
                 input_token, output_token, amount_in, min_output, fee=100,
             )
         if in_l == _BASE_WETH.lower() and out_l == _BASE_DAI.lower():
+            pool_states = self._get_pool_states(chain_id, snapshot)
+            if pool_states:
+                if snapshot is not None and snapshot.pool_states and pool_states is snapshot.pool_states:
+                    pool_states = dict(pool_states)
+                self._ensure_pools_for_route(chain_id, pool_states, input_token, output_token)
+                route = self._find_best_executable_route(
+                    pool_states, input_token, output_token, amount_in,
+                )
+                if route is not None and route[0] > 0:
+                    return None
             return self._build_base_v3_multihop(
                 intent, state, snapshot, chain_id,
                 [_BASE_WETH, _BASE_USDC, _BASE_DAI], [500, 100],
@@ -227,8 +237,8 @@ class MinerSolver(BaselineSwapSolver):
             version=SOLVER_VERSION,
             author=SOLVER_AUTHOR,
             description=(
-                "BaselineSwapSolver v1.2.2 with explicit Base DAI Uni V3 routes "
-                "(DAI/USDC direct, WETH/DAI via USDC hop)."
+                "Cross-DEX BaselineSwapSolver v3.1.0: Uni V3 + Aerodrome Slipstream "
+                "routing with Base DAI/USDC fast-path and WETH/DAI fallback hop."
             ),
             supported_chains=base.supported_chains,
             supported_intent_types=base.supported_intent_types,
